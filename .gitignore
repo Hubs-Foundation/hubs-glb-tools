@@ -1,0 +1,13 @@
+.DS_Store
+.idea
+*.log
+tmp/
+dist/
+test-files/
+
+*.tern-port
+node_modules/
+npm-debug.log*
+*.tsbuildinfo
+.npm
+.eslintcache
