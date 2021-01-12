@@ -1,8 +1,10 @@
-import { program } from "@caporal/core";
+import { Program } from "@caporal/core";
 import { optimizeCmd } from "optimizeCmd";
 
+const program = new Program();
 program
-  .description("Tool to optimize models for Mozilla Hubs")
+  .version(require("../package.json").version)
+  .description("Tool for working with glb files for Mozilla Hubs")
   .command("optimize", "Optimize a model for Hubs")
   .help("Optimize a model for Hubs")
   .argument("<input>", "input gltf/glb file")
@@ -20,4 +22,7 @@ program
   )
   .action(optimizeCmd);
 
-program.run();
+// Placeholder for any async init we may need later
+const programReady = Promise.resolve();
+
+export { program, programReady };

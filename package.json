@@ -2,14 +2,16 @@
   "name": "hubs-glb-tools",
   "version": "1.0.0",
   "description": "Tools for working with glb files for Mozilla Hubs",
+  "main": "dist/hubs-glb-tools.js",
   "source": "src/index.ts",
+  "types": "dist/index.d.ts",
   "scripts": {
     "dist": "microbundle --format cjs",
     "watch": "microbundle watch --format cjs",
     "prepare": "npm run dist"
   },
   "bin": {
-    "hubs-glb": "dist/hubs-glb-tools.js"
+    "hubs-glb": "bin/cli.js"
   },
   "license": "MPL-2.0",
   "dependencies": {
