@@ -1,7 +1,28 @@
-import { Extension, PropertyType, ExtensionProperty, TextureInfo } from "@gltf-transform/core";
+import {
+  Extension,
+  PropertyType,
+  ExtensionProperty,
+  TextureInfo,
+  Link,
+  TextureLink,
+  WriterContext,
+  Texture,
+  TextureChannel,
+} from "@gltf-transform/core";
+
+const { R, G, B } = TextureChannel;
 
 const NAME = "MOZ_lightmap";
 export class MozLightmapProperty extends ExtensionProperty {
+  public readonly propertyType = "MozLightmapProperty";
+  public readonly parentTypes = [PropertyType.MATERIAL];
+  public readonly extensionName = NAME;
+
+  lightmapTextureInfo: Link<this, TextureInfo>;
+  texCoord: any;
+  intensity: any;
+  lightmapTexture: TextureLink;
+
   constructor(graph, extension) {
     super(graph, extension);
     this.lightmapTextureInfo = this.graph.link("lightmapTextureInfo", this, new TextureInfo(this.graph));
@@ -15,7 +36,7 @@ export class MozLightmapProperty extends ExtensionProperty {
 
     if (other.lightmapTexture) {
       this.setLightmapTexture(resolve(other.lightmapTexture.getChild()));
-      this.getDiffuseTextureInfo().copy(resolve(other.lightmapTextureInfo.getChild()), resolve);
+      // this.getDiffuseTextureInfo().copy(resolve(other.lightmapTextureInfo.getChild()), resolve);
     }
 
     return this;
@@ -23,7 +44,7 @@ export class MozLightmapProperty extends ExtensionProperty {
 
   dispose() {
     this.lightmapTextureInfo.getChild().dispose();
-    this.specularGlossinessTextureInfo.getChild().dispose();
+    // this.specularGlossinessTextureInfo.getChild().dispose();
     super.dispose();
   }
 
@@ -35,19 +56,15 @@ export class MozLightmapProperty extends ExtensionProperty {
     return this.lightmapTexture ? this.lightmapTextureInfo.getChild() : null;
   }
 
-  setLightmapTexture(texture) {
-    this.lightmapTexture = this.graph.link("lightmapTexture", this, texture);
+  setLightmapTexture(texture: Texture | null): this {
+    this.lightmapTexture = this.graph.linkTexture("lightmapTexture", R | G | B, this, texture);
     return this;
   }
 }
 
-MozLightmapProperty.prototype.propertyType = "MozLightmapProperty";
-MozLightmapProperty.prototype.parentTypes = [PropertyType.MATERIAL];
-MozLightmapProperty.prototype.extensionName = NAME;
-MozLightmapProperty.EXTENSION_NAME = NAME;
-
 export class MozLightmap extends Extension {
-  constructionr() {}
+  public readonly extensionName = NAME;
+  public static readonly EXTENSION_NAME = NAME;
 
   read(context) {
     const jsonDoc = context.jsonDoc;
@@ -68,9 +85,9 @@ export class MozLightmap extends Extension {
       lightmap.intensity = texInfo.intensity;
       lightmap.texCoord = texInfo.texCoord;
 
-      // console.log(texInfo, textureDefs[texInfo.index]);
+      const lightmapTextureDef = textureDefs[texInfo.index];
 
-      lightmap.setLightmapTexture(context.textures[textureDefs[texInfo.index].source]);
+      lightmap.setLightmapTexture(context.textures[lightmapTextureDef.source]);
       context.setTextureInfo(lightmap.getLightmapTextureInfo(), texInfo);
 
       context.materials[matIndex].setExtension(NAME, lightmap);
@@ -78,14 +95,14 @@ export class MozLightmap extends Extension {
     return this;
   }
 
-  write(context) {
+  write(context: WriterContext) {
     const jsonDoc = context.jsonDoc;
 
     this.doc
       .getRoot()
       .listMaterials()
       .forEach((material) => {
-        const ext = material.getExtension(NAME);
+        const ext = material.getExtension(NAME) as MozLightmapProperty;
         if (ext) {
           const materialIndex = context.materialIndexMap.get(material);
           const materialDef = jsonDoc.json.materials[materialIndex];
@@ -114,5 +131,3 @@ export class MozLightmap extends Extension {
     return this;
   }
 }
-MozLightmap.prototype.extensionName = NAME;
-MozLightmap.EXTENSION_NAME = NAME;

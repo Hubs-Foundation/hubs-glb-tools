@@ -1,8 +1,9 @@
 import { NodeIO, Logger, ImageUtils, BufferUtils, Transform } from "@gltf-transform/core";
-import { ao, weld, dedup, inspect } from "@gltf-transform/lib";
+// import { ao, weld, dedup, inspect } from "@gltf-transform/functions";
 import { toktx, Mode, Filter } from "@gltf-transform/cli";
-import { HubsComponents } from "./HubsComponents.js";
-import { MozLightmap } from "./MozLightmap.js";
+import { HubsComponents } from "./HubsComponents";
+import { MozLightmap } from "./MozLightmap";
+import { MozTextureRGBE } from "./MozTextureRGBE";
 import { KHRONOS_EXTENSIONS } from "@gltf-transform/extensions";
 
 import WebSocket from "ws";
@@ -97,14 +98,15 @@ function fixTextureMimetypes(): Transform {
       .listTextures()
       .forEach((texture) => {
         const guessedType = guessImageMimeType(new DataView(texture.getImage()));
-        if (guessedType !== texture.getMimeType()) {
+        const mimeType = texture.getMimeType();
+        if (guessedType !== "unknown" && guessedType !== mimeType) {
           doc
             .getLogger()
             .warn(
-              `Texture ${texture.getName()} set with mime type: ${texture.getMimeType()} but appears to be ${guessedType}. Fixing.`
+              `Texture ${texture.getName()} set with mime type: ${mimeType} but appears to be ${guessedType}. Fixing.`
             );
+          texture.setMimeType(guessedType);
         }
-        texture.setMimeType("image/png");
       });
   };
 }
@@ -140,7 +142,9 @@ type OptimizeCmdOptions = {
 async function optimizeFile(inputFile: string, outputFile: string, { logger, texCompressionMode }) {
   logger.info(`Optimizing ${inputFile}...`);
 
-  const io = new NodeIO().registerExtensions(KHRONOS_EXTENSIONS).registerExtensions([HubsComponents, MozLightmap]);
+  const io = new NodeIO()
+    .registerExtensions(KHRONOS_EXTENSIONS)
+    .registerExtensions([HubsComponents, MozLightmap, MozTextureRGBE]);
   const doc = io.read(inputFile);
 
   const compressTextures =
@@ -148,14 +152,14 @@ async function optimizeFile(inputFile: string, outputFile: string, { logger, tex
 
   doc.setLogger(logger);
 
-  await doc.transform(
-    fixTextureMimetypes(),
-    printTextureMem("Uncompressed"),
-    compressTextures,
-    dedup({ textures: false, accessors: true }),
-    weld(),
-    printTextureMem("Compressed")
-  );
+  // await doc.transform(
+  // fixTextureMimetypes()
+  // printTextureMem("Uncompressed"),
+  // compressTextures,
+  // dedup({ textures: false, accessors: true }),
+  // weld(),
+  // printTextureMem("Compressed")
+  // );
 
   io.write(outputFile, doc);
 
