@@ -148,18 +148,19 @@ async function optimizeFile(inputFile: string, outputFile: string, { logger, tex
   const doc = io.read(inputFile);
 
   const compressTextures =
-    texCompressionMode === null ? () => {} : toktx({ mode: texCompressionMode, powerOfTwo: true });
+    texCompressionMode === null ? () => {} : toktx({ mode: texCompressionMode, powerOfTwo: true, slots: '{baseColorTexture,emissiveTexture,metallicRoughnessTexture,normalTexture}' });
 
   doc.setLogger(logger);
 
-  // await doc.transform(
-  // fixTextureMimetypes()
-  // printTextureMem("Uncompressed"),
-  // compressTextures,
-  // dedup({ textures: false, accessors: true }),
-  // weld(),
-  // printTextureMem("Compressed")
-  // );
+  
+  await doc.transform(
+    fixTextureMimetypes(),
+    printTextureMem("Uncompressed"),
+    compressTextures,
+    // dedup({ textures: false, accessors: true }),
+    // weld(),
+    printTextureMem("Compressed")
+  );
 
   io.write(outputFile, doc);
 
