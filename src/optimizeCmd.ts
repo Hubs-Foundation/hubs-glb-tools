@@ -147,16 +147,22 @@ async function optimizeFile(inputFile: string, outputFile: string, { logger, tex
     .registerExtensions([HubsComponents, MozLightmap, MozTextureRGBE]);
   const doc = io.read(inputFile);
 
-  const compressTextures =
-    texCompressionMode === null ? () => {} : toktx({ mode: texCompressionMode, powerOfTwo: true, slots: '{baseColorTexture,emissiveTexture,metallicRoughnessTexture,normalTexture}' });
-
+  // General compression setup
+  const compressTexturesDefault = texCompressionMode === "none" 
+    ? () => {} 
+    : toktx({ mode: texCompressionMode === "uastc" ? Mode.UASTC : Mode.ETC1S, powerOfTwo: true, slots: '{baseColorTexture,emissiveTexture,metallicRoughnessTexture}' });
+  // Normal map compression
+  const compressTexturesNormal  = texCompressionMode === "none" 
+    ? () => {} 
+    : toktx({ mode: texCompressionMode === "etc1s" ? Mode.ETC1S : Mode.UASTC, powerOfTwo: true, slots: 'normalTexture' });
+  
   doc.setLogger(logger);
-
   
   await doc.transform(
     fixTextureMimetypes(),
     printTextureMem("Uncompressed"),
-    compressTextures,
+    compressTexturesDefault,
+    compressTexturesNormal,
     // dedup({ textures: false, accessors: true }),
     // weld(),
     printTextureMem("Compressed")
@@ -170,7 +176,7 @@ async function optimizeFile(inputFile: string, outputFile: string, { logger, tex
 export async function optimizeCmd({ args, logger, options }) {
   const { input: inputFile, output: outputFile } = args as OptimizeCmdArgs;
   const opts = options as OptimizeCmdOptions;
-  const texCompressionMode = opts.ktx ? (opts.ktx === "uastc" ? Mode.UASTC : Mode.ETC1S) : null;
+  const texCompressionMode = opts.ktx;
 
   let wss: WebSocket;
   if (opts.serve) {

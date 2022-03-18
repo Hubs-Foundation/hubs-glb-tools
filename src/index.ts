@@ -11,8 +11,8 @@ program
   .argument("<output>", "output gltf/glb file")
   .option(
     "--ktx <compression-format>",
-    "Compress textures into KTX2 + Basis textures with the specified compression format",
-    { validator: ["etc1s", "uastc"] }
+    "Compress textures into KTX2 + Basis with either the specified format, 'none' to prevent compression, or 'auto' to select an appropriate format for the texture type (default)",
+    { validator: ["auto", "etc1s", "uastc", "none"], default: "auto" }
   )
   .option("--serve", "serve up the optimized file via an internal webserver on the specified port after optimizing")
   .option("--serve-port <port>", "Port to use for the internal webserver", { default: 7777 })
