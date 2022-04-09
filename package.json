@@ -22,6 +22,7 @@
     "@gltf-transform/functions": "^0.12.7",
     "connect-static-file": "^2.0.0",
     "cors": "^2.8.5",
+    "draco3dgltf": "^1.5.2",
     "express": "^4.17.1",
     "https": "^1.0.0",
     "selfsigned": "^1.10.8",
