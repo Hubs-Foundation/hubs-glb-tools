@@ -1,10 +1,11 @@
 import { NodeIO, Logger, ImageUtils, BufferUtils, Transform } from "@gltf-transform/core";
 // import { ao, weld, dedup, inspect } from "@gltf-transform/functions";
-import { toktx, Mode, Filter } from "@gltf-transform/cli";
+import { toktx, Mode, Filter, draco } from "@gltf-transform/cli";
 import { HubsComponents } from "./HubsComponents";
 import { MozLightmap } from "./MozLightmap";
 import { MozTextureRGBE } from "./MozTextureRGBE";
-import { KHRONOS_EXTENSIONS } from "@gltf-transform/extensions";
+import { KHRONOS_EXTENSIONS, DracoMeshCompression } from "@gltf-transform/extensions";
+import draco3d from 'draco3dgltf';
 
 import WebSocket from "ws";
 
@@ -137,14 +138,20 @@ type OptimizeCmdOptions = {
   serve: boolean;
   watch: boolean;
   servePort: number;
+  draco: boolean;
 };
 
-async function optimizeFile(inputFile: string, outputFile: string, { logger, texCompressionMode }) {
+async function optimizeFile(inputFile: string, outputFile: string, { logger, texCompressionMode, dracoCompression }) {
   logger.info(`Optimizing ${inputFile}...`);
 
   const io = new NodeIO()
     .registerExtensions(KHRONOS_EXTENSIONS)
-    .registerExtensions([HubsComponents, MozLightmap, MozTextureRGBE]);
+    .registerExtensions([HubsComponents, MozLightmap, MozTextureRGBE])
+    .registerExtensions([DracoMeshCompression])
+    .registerDependencies({
+        'draco3d.decoder': await draco3d.createDecoderModule(),
+        'draco3d.encoder': await draco3d.createEncoderModule(),
+    });
   const doc = io.read(inputFile);
 
   // General compression setup
@@ -155,6 +162,11 @@ async function optimizeFile(inputFile: string, outputFile: string, { logger, tex
   const compressTexturesNormal  = texCompressionMode === "none" 
     ? () => {} 
     : toktx({ mode: texCompressionMode === "etc1s" ? Mode.ETC1S : Mode.UASTC, powerOfTwo: true, slots: 'normalTexture' });
+
+    // Draco setup
+    const withDraco = dracoCompression === false
+    ? () => {}
+    : draco();
   
   doc.setLogger(logger);
   
@@ -163,6 +175,7 @@ async function optimizeFile(inputFile: string, outputFile: string, { logger, tex
     printTextureMem("Uncompressed"),
     compressTexturesDefault,
     compressTexturesNormal,
+    withDraco,
     // dedup({ textures: false, accessors: true }),
     // weld(),
     printTextureMem("Compressed")
@@ -177,6 +190,7 @@ export async function optimizeCmd({ args, logger, options }) {
   const { input: inputFile, output: outputFile } = args as OptimizeCmdArgs;
   const opts = options as OptimizeCmdOptions;
   const texCompressionMode = opts.ktx;
+  const dracoCompression = opts.draco;
 
   let wss: WebSocket;
   if (opts.serve) {
@@ -202,7 +216,7 @@ export async function optimizeCmd({ args, logger, options }) {
   }
 
   async function run() {
-    await optimizeFile(inputFile, outputFile, { logger, texCompressionMode });
+    await optimizeFile(inputFile, outputFile, { logger, texCompressionMode, dracoCompression });
     if (wss) {
       logger.info("Sending refresh to clients...");
       wss.clients.forEach(function each(client) {

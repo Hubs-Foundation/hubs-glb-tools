@@ -20,6 +20,10 @@ program
     "-w, --watch",
     "Watch the input file for changes and continously re-optimize it. Also send out a message on the local websocket when used with --serve"
   )
+  .option(
+    "-d, --draco",
+    "Compress with Draco compression"
+  )
   .action(optimizeCmd);
 
 // Placeholder for any async init we may need later
