@@ -4,7 +4,7 @@ import { optimizeCmd } from "optimizeCmd";
 const program = new Program();
 program
   .version(require("../package.json").version)
-  .description("Tool for working with glb files for Mozilla Hubs")
+  .description("Tool for working with glb files for Hubs")
   .command("optimize", "Optimize a model for Hubs")
   .help("Optimize a model for Hubs")
   .argument("<input>", "input gltf/glb file")
