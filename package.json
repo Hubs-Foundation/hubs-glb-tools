@@ -1,7 +1,7 @@
 {
   "name": "hubs-glb-tools",
   "version": "1.0.0",
-  "description": "Tools for working with glb files for Mozilla Hubs",
+  "description": "Tools for working with glb files for Hubs",
   "main": "dist/hubs-glb-tools.js",
   "source": "src/index.ts",
   "types": "dist/index.d.ts",
