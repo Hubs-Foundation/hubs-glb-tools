@@ -21,3 +21,14 @@ Note:
 2. the [--no-experimental-fetch](https://github.com/node-fetch/node-fetch/issues/1566) is required for node versions 18 and up
 
 <!--  TODO: ADD information for different compression types -->
+## Compression Types
+The command `node /bin/cli.js optimize input.glb output.glb --ktx {{compression type}}` is used to optimize a GLB file by applying texture compression using the KTX format. This command supports various compression types, each with different characteristics:
+
+`node /bin/cli.js optimize input.glb output.glb --ktx auto`
+Auto: This option automatically selects the compression type based on the texture type. For standard textures, it uses ETC1S compression, which provides a balance between file size and quality. For normal maps, it opts for UASTC compression, which preserves more detail, albeit with a larger file size.
+
+`node /bin/cli.js optimize input.glb output.glb --ktx etc1s`
+ETC1S: This compression type is designed to minimize file size, making it ideal for scenarios where storage or bandwidth is a concern. However, it offers lower quality compared to UASTC, which might result in a slight loss of detail in the textures.
+
+`node /bin/cli.js optimize input.glb output.glb --ktx uastc`
+UASTC: This option is focused on maintaining higher quality, especially for textures where detail is critical. It results in larger file sizes, but the visual fidelity is significantly better, making it suitable for applications where quality is a priority.
